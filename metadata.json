@@ -1,0 +1,7 @@
+{
+  "name": "Tauba App",
+  "description": "A comprehensive Islamic companion app featuring Quran, prayer times, and AI content.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
