@@ -213,8 +213,6 @@ const App: React.FC = () => {
                       <button onClick={() => setShowWallpaperSelector(true)} className="flex items-center justify-between p-6 rounded-[2.2rem] bg-white/5 border border-white/5 w-full hover:bg-white/10 active:scale-[0.97] group animate-slide-up" style={{animationDelay: '180ms'}}>
                         <div className="flex items-center gap-5"><div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/10"><Palette size={22} className="text-emerald-400" /></div><span className="font-bold text-xl">{t.selectWallpaper}</span></div><ChevronRight className="text-white/20 group-hover:text-emerald-500" size={22} />
                       </button>
-                        <div className="flex items-center gap-5"><div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/10"><Landmark size={22} className="text-blue-400" /></div><span className="font-bold text-xl">Muftyat.kz</span></div><ChevronRight className="text-white/20 group-hover:text-emerald-500" size={22} />
-                      </button>
                     </div>
                 </div>
               )}
