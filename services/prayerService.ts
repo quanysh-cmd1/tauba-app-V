@@ -1,5 +1,6 @@
 
 import { PrayerTimes, HijriDateInfo, IslamicEvent, City } from '../types';
+import { calculatePrayerTimes } from './prayerCalc';
 
 export const cleanTime = (time: string): string => {
   if (!time) return "--:--";
@@ -30,81 +31,23 @@ export const findClosestCity = (lat: number, lng: number, cities: City[]): City 
   return closest;
 };
 
-const fetchAladhanFallback = async (city: City): Promise<PrayerTimes | null> => {
-  try {
-    const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city.title)}&country=Kazakhstan&method=3`);
-    if (!response.ok) return null;
-    const data = await response.json();
-    const t = data.data.timings;
-    return {
-      Fajr: cleanTime(t.Fajr), Sunrise: cleanTime(t.Sunrise), Dhuhr: cleanTime(t.Dhuhr),
-      Asr: cleanTime(t.Asr), Maghrib: cleanTime(t.Maghrib), Isha: cleanTime(t.Isha), Midnight: cleanTime(t.Midnight)
-    };
-  } catch (e) { return null; }
-};
-
-const fetchMuftyatModern = async (city: City, date: Date): Promise<PrayerTimes | null> => {
-    try {
-        const year = date.getFullYear();
-        const lat = city.lat;
-        const lng = city.lng;
-        // Жаңа Муфтият API: api.muftyat.kz/prayer-times/Year/Lat/Lng
-        const url = `https://api.muftyat.kz/prayer-times/${year}/${lat}/${lng}`;
-        const res = await fetch(url);
-        if (!res.ok) return null;
-        const data = await res.json();
-        
-        // API бүкіл жылдың кестесін қайтарса, ағымдағы күнді табу керек
-        const dateStr = date.toISOString().split('T')[0];
-        const dayData = data.result?.find((d: any) => d.date === dateStr) || data.result?.[0];
-
-        if (dayData) {
-            return {
-                Fajr: cleanTime(dayData.fajr),
-                Sunrise: cleanTime(dayData.sunrise),
-                Dhuhr: cleanTime(dayData.dhuhr),
-                Asr: cleanTime(dayData.asr),
-                Maghrib: cleanTime(dayData.maghrib),
-                Isha: cleanTime(dayData.isha),
-                Midnight: "--:--"
-            };
-        }
-        return null;
-    } catch (e) { return null; }
-};
-
+/**
+ * Tauba App Internal API - No external URL calls
+ * Uses astronomical calculations based on city coordinates
+ */
 export const getPrayerTimes = async (city: City, date: Date): Promise<PrayerTimes> => {
-  const cacheKey = `prayer_times_${city.id}_${date.toISOString().split('T')[0]}`;
-  const cached = localStorage.getItem(cacheKey);
-  if (cached) {
-    try { return JSON.parse(cached); } catch(e) {}
-  }
+  // We use a fixed timezone of 5 for Kazakhstan as per recent changes
+  // and standard angles for Muftyat (Fajr: 15, Isha: 15)
+  const times = calculatePrayerTimes(
+    date, 
+    Number(city.lat), 
+    Number(city.lng), 
+    5, // Timezone
+    15, // Fajr Angle
+    15  // Isha Angle
+  );
   
-  let times = await fetchMuftyatModern(city, date);
-  if (!times) {
-      // Ескі API-ға немесе Aladhan-ға өту
-      const oldUrl = `https://namaz.muftyat.kz/kk/namaz/api/today/${city.id}`;
-      try {
-          const res = await fetch(oldUrl);
-          const data = await res.json();
-          const t = data.result || data;
-          if (t && t.fajr) {
-              times = {
-                  Fajr: cleanTime(t.fajr), Sunrise: cleanTime(t.sunrise), Dhuhr: cleanTime(t.dhuhr),
-                  Asr: cleanTime(t.asr), Maghrib: cleanTime(t.maghrib), Isha: cleanTime(t.isha), Midnight: "--:--"
-              };
-          }
-      } catch (e) {}
-  }
-
-  if (!times) times = await fetchAladhanFallback(city);
-  
-  if (times) {
-    localStorage.setItem(cacheKey, JSON.stringify(times));
-    return times;
-  }
-  
-  return { Fajr: "--:--", Sunrise: "--:--", Dhuhr: "--:--", Asr: "--:--", Maghrib: "--:--", Isha: "--:--", Midnight: "--:--" };
+  return times;
 };
 
 export const calculateQiblaHeading = (lat: number, lng: number): number => {
@@ -163,8 +106,6 @@ export const getIslamicEvents = (year: number): IslamicEvent[] => {
 };
 
 export async function checkApiHealth(): Promise<boolean> {
-    try {
-        const res = await fetch('https://api.muftyat.kz/cities/', { method: 'HEAD', cache: 'no-store' });
-        return res.ok;
-    } catch (e) { return false; }
+    // Always healthy as it's internal
+    return true;
 }
