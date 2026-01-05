@@ -18,12 +18,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'pnpm'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10
+        run: npm install -g pnpm
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -36,7 +33,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Build web project
         run: pnpm build
@@ -49,7 +46,7 @@ jobs:
 
       - name: Build APK (Debug)
         working-directory: ./android
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK to Artifacts
         uses: actions/upload-artifact@v4
@@ -57,40 +54,17 @@ jobs:
         with:
           name: tauba-app-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 30
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         if: success()
         with:
           files: android/app/build/outputs/apk/debug/app-debug.apk
-          tag_name: release-${{ github.run_number }}
-          name: Tauba App Release ${{ github.run_number }}
+          tag_name: v${{ github.run_number }}
+          name: Tauba App v${{ github.run_number }}
           body: |
-            # Tauba App - Android APK
-            
-            APK файлы құрастырылды және дайын!
-            
-            ## Орнату нұсқасы:
-            1. Телефонда "Белгісіз көздерден қолданбалар" опциясын қосыңыз
-            2. APK файлын телефонға жүктеңіз
-            3. Файлды ашып, орнатыңыз
-            
-            ## Ынамдау:
-            - Бұл Debug APK, сондықтан ынамдау хабарламасы көрсетіледі
-            - Қолданба сіздің деректеріңізді сақтайды және оффлайнда жұмыс істейді
+            APK файлы дайын!
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload APK to Release Assets
-        uses: actions/upload-release-asset@v1
-        if: success()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: android/app/build/outputs/apk/debug/app-debug.apk
-          asset_name: tauba-app-debug.apk
-          asset_content_type: application/vnd.android.package-archive
