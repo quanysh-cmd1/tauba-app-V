@@ -12,7 +12,9 @@ import QuranView from './components/QuranView';
 import HadithView from './components/HadithView';
 import CalendarView from './components/CalendarView';
 // Fixed: Added Landmark to the imports from lucide-react
-import { MapPin, Search, X, Check, ChevronRight, Sparkles, Compass, Book, Calendar, Palette, Moon, Sun, Download, FileArchive, Loader2, MessageCircle, ScrollText, Landmark } from 'lucide-react';
+import { MapPin, Search, X, Check, ChevronRight, Sparkles, Compass, Book, Calendar, Palette, Moon, Sun, Download, FileArchive, Loader2, MessageCircle, ScrollText, Landmark, LogIn, LogOut, User } from 'lucide-react';
+import { auth, signInWithGoogle, signOutUser, getUserProgress, updateUserSettings } from './services/firebase';
+import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 
 const ParticleBackground = () => {
   return (
@@ -58,8 +60,73 @@ const App: React.FC = () => {
   const [hijriDate, setHijriDate] = useState<HijriDateInfo | null>(null);
   const [nextPrayer, setNextPrayer] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const t = TRANSLATIONS[lang];
+
+  // Firebase auth listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      if (user) {
+        getUserProgress(user).then(progress => {
+          if (progress?.settings) {
+            if (progress.settings.language) setLang(progress.settings.language as Language);
+            if (progress.settings.selectedCity) {
+              const city = CITY_DATABASE.find(c => c.id === progress.settings.selectedCity);
+              if (city) setSelectedCity(city);
+            }
+          }
+        });
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+      setShowAuthModal(false);
+    } catch (error) {
+      console.error('Sign in failed:', error);
+    }
+  };
+
+  const handleSignOut = async () => {
+
+  // Auth Modal Component
+  const AuthModal = () => (
+    <div className="fixed inset-0 z-[100] bg-deep-950/40 backdrop-blur-[80px] flex items-center justify-center p-6 animate-fade-in">
+      <div className="ios-glass w-full max-w-md rounded-[3rem] p-10 flex flex-col shadow-2xl animate-ios-spring">
+        <h2 className="text-3xl font-black tracking-tighter mb-6">Google-ға кіру</h2>
+        <p className="text-white/60 mb-8">Өтінегіңіз сақталады және келесі күні жалғастыра аласыз</p>
+        <button onClick={handleGoogleSignIn} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl transition-all active:scale-95 mb-4 flex items-center justify-center gap-3">
+          <LogIn size={20} /> Google-ға кіру
+        </button>
+        <button onClick={() => setShowAuthModal(false)} className="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-4 rounded-2xl transition-all">
+          Бас тарту
+        </button>
+      </div>
+    </div>
+  );
+    try {
+      await signOutUser();
+    } catch (error) {
+      console.error('Sign out failed:', error);
+    }
+  };
+
+  // Save settings to Firebase when they change
+  useEffect(() => {
+    if (currentUser) {
+      updateUserSettings(currentUser, {
+        language: lang,
+        selectedCity: selectedCity.id,
+        theme: currentBg.id
+      });
+    }
+  }, [lang, selectedCity, currentBg, currentUser]);
 
   const resolvedBgUrl = useMemo(() => {
     if (currentBg.type === 'dynamic') {
@@ -154,6 +221,20 @@ const App: React.FC = () => {
                    <button onClick={() => setLang(lang === 'kk' ? 'ru' : 'kk')} className="px-3 h-9 text-[11px] font-black text-emerald-500 hover:bg-white/10 rounded-full transition-all uppercase tracking-[0.2em]">
                      {lang}
                    </button>
+                   {currentUser ? (
+                     <div className="flex items-center gap-2">
+                       <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                         <User size={14} className="text-emerald-400" />
+                       </div>
+                       <button onClick={handleSignOut} className="w-9 h-9 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors group" title="Sign out">
+                         <LogOut size={14} className="text-white/40 group-hover:text-emerald-400 transition-colors" />
+                       </button>
+                     </div>
+                   ) : (
+                     <button onClick={() => setShowAuthModal(true)} className="w-9 h-9 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors group" title="Sign in">
+                       <LogIn size={14} className="text-white/40 group-hover:text-emerald-400 transition-colors" />
+                     </button>
+                   )}
                </div>
             </div>
           </header>

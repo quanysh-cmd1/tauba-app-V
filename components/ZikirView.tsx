@@ -4,6 +4,7 @@ import { RotateCcw, Share2, X, ChevronLeft, Eye, EyeOff, Loader2, Download, Type
 import { Language, ZikirDefinition, ZikirCategory } from '../types';
 import { ZIKIR_LIST } from '../constants';
 import { generateZikirRewardImage } from '../services/geminiService';
+import { updateZikirProgress, auth } from '../services/firebase';
 
 interface ZikirViewProps {
   lang: Language;

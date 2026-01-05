@@ -4,6 +4,8 @@ import { Surah, Ayah, Language } from '../types';
 import { getSurahs, getSurahDetails, getSurahKazakhName } from '../services/quranService';
 import { getAyahTafsir } from '../services/geminiService';
 import { ChevronLeft, Play, Pause, X, Sparkles, Eye, EyeOff, Loader2, Search, Copy } from 'lucide-react';
+import { updateQuranProgress } from '../services/firebase';
+import { auth } from '../services/firebase';
 
 interface QuranViewProps {
   lang: Language;
@@ -97,7 +99,7 @@ const QuranView: React.FC<QuranViewProps> = ({ lang, labels }) => {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto no-scrollbar px-6 md:px-10 pb-32 pt-10 max-w-5xl mx-auto w-full">
+        <div className="flex-1 overflow-y-auto no-scrollbar px-3 sm:px-6 md:px-10 pb-32 pt-10 max-w-5xl mx-auto w-full">
            {loading ? (
              <div className="flex flex-col items-center justify-center py-32 opacity-20">
                 <Loader2 className="animate-spin text-emerald-500 mb-8" size={64} />
@@ -111,7 +113,7 @@ const QuranView: React.FC<QuranViewProps> = ({ lang, labels }) => {
                         <span className="w-10 h-10 rounded-full border border-emerald-500/20 flex items-center justify-center text-[12px] font-black text-emerald-500/50">{ayah.numberInSurah}</span>
                         <div className="h-px w-24 bg-emerald-500/10"></div>
                      </div>
-                     <p className={`text-5xl md:text-7xl font-quran leading-[2] text-right text-white selection:bg-emerald-500/30 transition-all duration-700 ${active ? 'text-emerald-400 drop-shadow-[0_0_40px_rgba(16,185,129,0.4)]' : 'opacity-80'}`} dir="rtl">
+                     <p className={`text-3xl sm:text-5xl md:text-7xl font-quran leading-[2] text-right text-white selection:bg-emerald-500/30 transition-all duration-700 ${active ? 'text-emerald-400 drop-shadow-[0_0_40px_rgba(16,185,129,0.4)]' : 'opacity-80'}`} dir="rtl">
                        {ayah.text}
                      </p>
                   </div>
