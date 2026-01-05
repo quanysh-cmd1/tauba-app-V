@@ -12,27 +12,31 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
 
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
+          cache: 'gradle'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
-
-      - name: Install pnpm
-        run: npm install -g pnpm
+        uses: android-actions/setup-android@v3
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build web project
         run: pnpm build
@@ -40,42 +44,53 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Build APK
+      - name: Make gradlew executable
+        run: chmod +x ./android/gradlew
+
+      - name: Build APK (Debug)
         working-directory: ./android
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK to Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: tauba-app-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
 
-      - name: Create Release
-        uses: actions/create-release@v1
-        if: github.event_name == 'push'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        if: success()
         with:
-          tag_name: v${{ github.run_number }}
-          release_name: Tauba App v${{ github.run_number }}
+          files: android/app/build/outputs/apk/debug/app-debug.apk
+          tag_name: release-${{ github.run_number }}
+          name: Tauba App Release ${{ github.run_number }}
           body: |
+            # Tauba App - Android APK
+            
             APK файлы құрастырылды және дайын!
             
-            APK файлын төменде жүктеп алыңыз:
-            - tauba-app-debug.apk
-            
-            Орнату нұсқасы:
+            ## Орнату нұсқасы:
             1. Телефонда "Белгісіз көздерден қолданбалар" опциясын қосыңыз
             2. APK файлын телефонға жүктеңіз
             3. Файлды ашып, орнатыңыз
+            
+            ## Ынамдау:
+            - Бұл Debug APK, сондықтан ынамдау хабарламасы көрсетіледі
+            - Қолданба сіздің деректеріңізді сақтайды және оффлайнда жұмыс істейді
           draft: false
           prerelease: false
-
-      - name: Upload APK to Release
-        uses: softprops/action-gh-release@v1
-        if: github.event_name == 'push'
-        with:
-          files: android/app/build/outputs/apk/debug/app-debug.apk
-          tag_name: v${{ github.run_number }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload APK to Release Assets
+        uses: actions/upload-release-asset@v1
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: android/app/build/outputs/apk/debug/app-debug.apk
+          asset_name: tauba-app-debug.apk
+          asset_content_type: application/vnd.android.package-archive
