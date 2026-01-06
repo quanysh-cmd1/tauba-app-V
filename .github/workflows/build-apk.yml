@@ -35,6 +35,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Install Capacitor CLI
+        run: pnpm add -D @capacitor/cli @capacitor/android
+
       - name: Build web project
         run: pnpm build
 
