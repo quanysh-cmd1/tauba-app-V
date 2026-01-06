@@ -39,7 +39,7 @@ jobs:
         run: pnpm build
 
       - name: Sync Capacitor
-        run: npx cap sync android
+        run: pnpm exec cap sync android
 
       - name: Make gradlew executable
         run: chmod +x ./android/gradlew
