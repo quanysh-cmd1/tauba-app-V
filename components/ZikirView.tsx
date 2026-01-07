@@ -303,16 +303,16 @@ const ZikirView: React.FC<ZikirViewProps> = ({ lang, labels }) => {
          </button>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center z-10 pb-20">
-         <div className={`text-center space-y-8 px-10 transition-all duration-1000 ${isFocusMode ? 'opacity-0 -translate-y-24 scale-90 pointer-events-none' : 'opacity-100'}`}>
-            <h2 className="text-5xl font-black text-white">{selectedZikir.title[lang]}</h2>
-            <p className="text-5xl font-quran text-emerald-400 drop-shadow-[0_0_20px_rgba(16,185,129,0.3)]" dir="rtl">{selectedZikir.arabic}</p>
+      <div className="flex-1 flex flex-col items-center justify-center z-10 pb-20 px-4">
+         <div className={`text-center space-y-4 sm:space-y-8 px-4 sm:px-10 transition-all duration-1000 ${isFocusMode ? 'opacity-0 -translate-y-24 scale-90 pointer-events-none' : 'opacity-100'}`}>
+            <h2 className="text-3xl sm:text-5xl font-black text-white">{selectedZikir.title[lang]}</h2>
+            <p className="text-3xl sm:text-5xl font-quran text-emerald-400 drop-shadow-[0_0_20px_rgba(16,185,129,0.3)]" dir="rtl">{selectedZikir.arabic}</p>
          </div>
 
-         <div className={`relative transition-all duration-1000 ${isFocusMode ? 'scale-150 translate-y-8' : 'mt-20 scale-100'}`}>
+         <div className={`relative transition-all duration-1000 ${isFocusMode ? 'scale-125 sm:scale-150 translate-y-8' : 'mt-10 sm:mt-20 scale-100'}`}>
             <button 
               onClick={handleTap} 
-              className={`w-96 h-96 rounded-full flex flex-col items-center justify-center relative overflow-hidden transition-all duration-500 active:scale-[0.95] group ${
+              className={`w-64 h-64 sm:w-96 sm:h-96 rounded-full flex flex-col items-center justify-center relative overflow-hidden transition-all duration-500 active:scale-[0.95] group ${
                 isFocusMode 
                   ? 'bg-transparent border-emerald-500/10 border-2 shadow-none' 
                   : 'ios-glass bg-white/5 border border-white/10 hover:border-emerald-500/40 hover:bg-white/10 hover:shadow-[0_0_80px_rgba(16,185,129,0.2)] shadow-3xl'
@@ -324,7 +324,7 @@ const ZikirView: React.FC<ZikirViewProps> = ({ lang, labels }) => {
                 ></div>
                 
                 <div className="relative z-10 flex flex-col items-center">
-                    <span className={`font-black tracking-tighter tabular-nums leading-none transition-all duration-700 ${isFocusMode ? 'text-[13rem] text-emerald-400/95 drop-shadow-[0_0_50px_rgba(16,185,129,0.4)]' : 'text-9xl text-white'}`}>
+                    <span className={`font-black tracking-tighter tabular-nums leading-none transition-all duration-700 ${isFocusMode ? 'text-[8rem] sm:text-[13rem] text-emerald-400/95 drop-shadow-[0_0_50px_rgba(16,185,129,0.4)]' : 'text-7xl sm:text-9xl text-white'}`}>
                       {count}
                     </span>
                     <div className={`mt-6 flex flex-col items-center transition-all duration-700 ${isFocusMode ? 'opacity-20' : 'opacity-40 group-hover:opacity-70'}`}>
@@ -335,22 +335,23 @@ const ZikirView: React.FC<ZikirViewProps> = ({ lang, labels }) => {
          </div>
 
          {!isFocusMode && (
-           <div className="mt-20 flex items-center gap-10 animate-fade-in lg:scale-110">
-             <button onClick={() => { if(confirm('Нөлдеу?')) setCount(0); }} className="w-16 h-16 ios-glass border border-white/10 bg-white/5 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/10 hover:border-emerald-500/40 transition-all active:scale-90 shadow-xl"><RotateCcw size={24} /></button>
+           <div className="mt-10 sm:mt-20 flex flex-col sm:flex-row items-center gap-6 sm:gap-10 animate-fade-in lg:scale-110">
+             <div className="flex items-center gap-6">
+               <button onClick={() => { if(confirm('Нөлдеу?')) setCount(0); }} className="w-14 h-14 sm:w-16 sm:h-16 ios-glass border border-white/10 bg-white/5 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/10 hover:border-emerald-500/40 transition-all active:scale-90 shadow-xl"><RotateCcw size={20} /></button>
+               <button onClick={() => triggerReward(count)} className="w-14 h-14 sm:w-16 sm:h-16 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-2xl shadow-emerald-900/50 active:scale-90 hover:bg-emerald-500 transition-all border border-emerald-400/50 hover:-translate-y-2"><Share2 size={20} /></button>
+             </div>
              
-             <div className="ios-glass p-2 rounded-full flex gap-2 border border-white/10 shadow-3xl bg-white/5">
+             <div className="ios-glass p-1.5 rounded-full flex gap-1 border border-white/10 shadow-3xl bg-white/5">
                  {[33, 100, 1000].map(t => (
                    <button 
                      key={t} 
                      onClick={() => setTarget(t)} 
-                     className={`px-10 py-4 rounded-full text-[11px] font-black tracking-widest transition-all duration-500 hover:scale-[1.05] active:scale-95 ${target === t ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-900/40' : 'text-white/40 hover:text-white/60 hover:bg-white/5'}`}
+                     className={`px-6 sm:px-10 py-3 sm:py-4 rounded-full text-[10px] sm:text-[11px] font-black tracking-widest transition-all duration-500 hover:scale-[1.05] active:scale-95 ${target === t ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-900/40' : 'text-white/40 hover:text-white/60 hover:bg-white/5'}`}
                    >
                      {t}
                    </button>
                  ))}
              </div>
-             
-             <button onClick={() => triggerReward(count)} className="w-16 h-16 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-2xl shadow-emerald-900/50 active:scale-90 hover:bg-emerald-500 transition-all border border-emerald-400/50 hover:-translate-y-2"><Share2 size={24} /></button>
            </div>
          )}
       </div>

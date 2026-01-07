@@ -43,17 +43,17 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, labels })
     { id: 'quran', label: labels.quran, icon: BookOpen },
     { id: 'zikir', label: labels.zikir, icon: Flower },
     { id: 'qibla', label: labels.qibla, icon: Compass },
-    { id: 'more', label: labels.more, icon: Grid },
+    { id: 'calendar', label: labels.calendar, icon: Calendar },
   ];
 
   return (
     <>
       {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-8 left-0 right-0 z-50 flex justify-center px-8 pointer-events-none">
-        <div className="pointer-events-auto ios-glass rounded-[2.5rem] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.6)] p-2 flex justify-between items-center max-w-[360px] w-full border border-white/20">
+      <div className="lg:hidden fixed bottom-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+        <div className="pointer-events-auto ios-glass rounded-[2.2rem] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.6)] p-1.5 flex justify-between items-center max-w-[340px] w-full border border-white/10">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = currentView === item.id || (item.id === 'more' && ['ai-imam', 'hadith', 'riwayat', 'wallpapers', 'calendar'].includes(currentView));
+            const isActive = currentView === item.id;
             return (
               <button
                 key={item.id}
@@ -84,7 +84,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, labels })
         <nav className="flex-1 flex flex-col gap-4">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = currentView === item.id || (item.id === 'more' && ['ai-imam', 'hadith', 'riwayat', 'wallpapers', 'calendar'].includes(currentView));
+            const isActive = currentView === item.id;
             return (
               <button
                 key={item.id}
@@ -107,7 +107,19 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, setView, labels })
           })}
         </nav>
 
-        <div className="mt-auto">
+        <div className="mt-auto flex flex-col gap-4">
+          <button 
+            onClick={() => {
+              const link = document.createElement('a');
+              link.href = 'https://github.com/quanysh-cmd1/tauba-app-V/releases/latest/download/app-release.apk';
+              link.download = 'tauba-app.apk';
+              link.click();
+            }}
+            className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-white/20 hover:text-white hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all"
+            title="Download APK"
+          >
+             <Download size={20} />
+          </button>
           <button onClick={() => setView('more')} className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-white/20 hover:text-white transition-all">
              <Palette size={20} />
           </button>

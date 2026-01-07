@@ -163,12 +163,12 @@ const HadithView: React.FC<HadithViewProps> = ({ lang, labels, mode = 'hadith' }
 
   return (
     <div className="flex flex-col h-full animate-fade-in">
-      <div className="px-6 pt-6 pb-2">
-         <h2 className="text-3xl font-black tracking-tighter mb-2">{mode === 'hadith' ? labels.hadith : labels.riwayat}</h2>
-         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400 mb-6">{mode === 'hadith' ? 'Күнделікті қасиетті хадистер' : 'Ғибратты қиссалар мен оқиғалар'}</p>
+      <div className="px-4 sm:px-6 pt-6 sm:pt-10 pb-2">
+         <h2 className="text-2xl sm:text-3xl font-black tracking-tighter mb-2">{mode === 'hadith' ? labels.hadith : labels.riwayat}</h2>
+         <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400 mb-4 sm:mb-6">{mode === 'hadith' ? 'Күнделікті қасиетті хадистер' : 'Ғибратты қиссалар мен оқиғалар'}</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 pb-40 no-scrollbar">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-5 pb-40 no-scrollbar">
         {loading ? (
           <div className="h-64 flex flex-col items-center justify-center opacity-40">
             <Loader2 className="animate-spin text-emerald-500 mb-4" size={32} />
@@ -179,10 +179,10 @@ const HadithView: React.FC<HadithViewProps> = ({ lang, labels, mode = 'hadith' }
             <div className="absolute top-0 right-0 p-8 opacity-10">
                {mode === 'hadith' ? <Book size={120} className="text-emerald-500" /> : <ScrollText size={120} className="text-orange-500" />}
             </div>
-            <div className="p-10 relative z-10">
-              <h3 className="text-2xl font-black text-emerald-400 mb-8 font-serif leading-tight">{content.title}</h3>
-              <p className="text-[17px] font-medium leading-[1.8] text-white/80 whitespace-pre-wrap">{content.content}</p>
-              {content.reference && <p className="mt-10 text-[10px] text-white/20 font-black uppercase tracking-widest border-t border-white/5 pt-6">{labels.source}: {content.reference}</p>}
+            <div className="p-6 sm:p-10 relative z-10">
+              <h3 className="text-xl sm:text-2xl font-black text-emerald-400 mb-6 sm:mb-8 font-serif leading-tight">{content.title}</h3>
+              <p className="text-base sm:text-[17px] font-medium leading-[1.8] text-white/80 whitespace-pre-wrap">{content.content}</p>
+              {content.reference && <p className="mt-8 sm:mt-10 text-[10px] text-white/20 font-black uppercase tracking-widest border-t border-white/5 pt-6">{labels.source}: {content.reference}</p>}
               
               <div className="mt-12 flex gap-3">
                  <button onClick={generateShareImage} className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-[1.8rem] text-[11px] font-black uppercase tracking-widest text-white shadow-xl active:scale-95 transition-all ${mode === 'hadith' ? 'bg-emerald-600 shadow-emerald-900/40' : 'bg-orange-600 shadow-orange-900/40'}`}>

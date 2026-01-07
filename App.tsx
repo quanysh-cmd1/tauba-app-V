@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { ViewState, Language, City, PrayerTimes, HijriDateInfo, AppBackground } from './types';
 import { CITY_DATABASE, TRANSLATIONS, BACKGROUNDS, ZIKIR_LIST } from './constants';
@@ -11,10 +10,11 @@ import AIImamView from './components/AIImamView';
 import QuranView from './components/QuranView';
 import HadithView from './components/HadithView';
 import CalendarView from './components/CalendarView';
-// Fixed: Added Landmark to the imports from lucide-react
-import { MapPin, Search, X, Check, ChevronRight, Sparkles, Compass, Book, Calendar, Palette, Moon, Sun, Download, FileArchive, Loader2, MessageCircle, ScrollText, Landmark, LogIn, LogOut, User } from 'lucide-react';
-import { auth, signInWithGoogle, signOutUser, getUserProgress, updateUserSettings } from './services/firebase';
+import { MapPin, Search, X, Check, ChevronRight, Sparkles, Compass, Book, Calendar, Palette, Moon, Sun, Download, FileArchive, Loader2, MessageCircle, ScrollText, Landmark, LogIn, LogOut, User, Bell, BellOff } from 'lucide-react';
+import { auth, signInWithGoogle, signOutUser, getUserProgress, updateUserSettings, saveUserProgress } from './services/firebase';
 import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
+import { adhanService } from './services/adhanService';
+import AdminView from './components/AdminView';
 
 const ParticleBackground = () => {
   return (
@@ -43,16 +43,23 @@ const ParticleBackground = () => {
 const App: React.FC = () => {
   const [lang, setLang] = useState<Language>('kk');
   const [currentView, setCurrentView] = useState<ViewState>('prayer');
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [adhanEnabled, setAdhanEnabled] = useState(adhanService.getEnabled());
+  
   const [selectedCity, setSelectedCity] = useState<City>(() => {
     const saved = localStorage.getItem('tauba_city_id');
     if (saved) return CITY_DATABASE.find(c => c.id === parseInt(saved)) || CITY_DATABASE[0];
     return CITY_DATABASE[0];
   });
+  
   const [currentBg, setCurrentBg] = useState<AppBackground>(() => {
     const saved = localStorage.getItem('tauba_bg_id');
     if (saved) return BACKGROUNDS.find(b => b.id === saved) || BACKGROUNDS[0];
     return BACKGROUNDS[0];
   });
+  
   const [showCitySearch, setShowCitySearch] = useState(false);
   const [showWallpaperSelector, setShowWallpaperSelector] = useState(false);
   const [cityQuery, setCityQuery] = useState('');
@@ -60,8 +67,6 @@ const App: React.FC = () => {
   const [hijriDate, setHijriDate] = useState<HijriDateInfo | null>(null);
   const [nextPrayer, setNextPrayer] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const t = TRANSLATIONS[lang];
 
@@ -86,7 +91,19 @@ const App: React.FC = () => {
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle();
+      const user = await signInWithGoogle();
+      if (user) {
+        const progress = await getUserProgress(user);
+        if (!progress) {
+          await saveUserProgress(user, {
+            settings: {
+              language: lang,
+              selectedCity: selectedCity.id,
+              theme: currentBg.id
+            }
+          });
+        }
+      }
       setShowAuthModal(false);
     } catch (error) {
       console.error('Sign in failed:', error);
@@ -94,27 +111,17 @@ const App: React.FC = () => {
   };
 
   const handleSignOut = async () => {
-
-  // Auth Modal Component
-  const AuthModal = () => (
-    <div className="fixed inset-0 z-[100] bg-deep-950/40 backdrop-blur-[80px] flex items-center justify-center p-6 animate-fade-in">
-      <div className="ios-glass w-full max-w-md rounded-[3rem] p-10 flex flex-col shadow-2xl animate-ios-spring">
-        <h2 className="text-3xl font-black tracking-tighter mb-6">Google-ға кіру</h2>
-        <p className="text-white/60 mb-8">Өтінегіңіз сақталады және келесі күні жалғастыра аласыз</p>
-        <button onClick={handleGoogleSignIn} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl transition-all active:scale-95 mb-4 flex items-center justify-center gap-3">
-          <LogIn size={20} /> Google-ға кіру
-        </button>
-        <button onClick={() => setShowAuthModal(false)} className="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-4 rounded-2xl transition-all">
-          Бас тарту
-        </button>
-      </div>
-    </div>
-  );
     try {
       await signOutUser();
     } catch (error) {
       console.error('Sign out failed:', error);
     }
+  };
+
+  const toggleAdhan = () => {
+    const newState = !adhanEnabled;
+    setAdhanEnabled(newState);
+    adhanService.setEnabled(newState);
   };
 
   // Save settings to Firebase when they change
@@ -151,6 +158,7 @@ const App: React.FC = () => {
       const times = await getPrayerTimes(selectedCity, date);
       setPrayerTimes(times);
       setHijriDate(getHijriDate(date, lang));
+      if (times) adhanService.startMonitoring(times);
       setLoading(false);
     };
     update();
@@ -207,38 +215,52 @@ const App: React.FC = () => {
       <Navigation currentView={currentView} setView={setCurrentView} labels={t as any} glassColor="ios-glass" />
 
       <div className="flex-1 flex flex-col h-full relative z-10 overflow-hidden">
-        {currentView === 'prayer' && (
-          <header className="flex-none px-6 pt-safe mt-3 z-40 relative flex justify-center animate-fade-in-up">
-            <div className="ios-glass h-12 rounded-full px-1.5 flex items-center justify-between w-full max-w-[340px] shadow-2xl backdrop-blur-md">
-               <button onClick={() => setShowCitySearch(true)} className="flex items-center space-x-2 px-4 h-9 hover:bg-white/5 rounded-full transition-all active:scale-95">
-                  <MapPin size={15} className="text-emerald-500" />
-                  <span className="text-[13px] font-bold tracking-tight text-white/90">{selectedCity.title}</span>
-               </button>
-               <div className="flex items-center gap-1">
-                   <button onClick={() => setShowWallpaperSelector(true)} className="w-9 h-9 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors group">
-                     <Palette size={14} className="text-white/40 group-hover:text-emerald-400 transition-colors" />
-                   </button>
-                   <button onClick={() => setLang(lang === 'kk' ? 'ru' : 'kk')} className="px-3 h-9 text-[11px] font-black text-emerald-500 hover:bg-white/10 rounded-full transition-all uppercase tracking-[0.2em]">
-                     {lang}
-                   </button>
-                   {currentUser ? (
-                     <div className="flex items-center gap-2">
-                       <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
-                         <User size={14} className="text-emerald-400" />
-                       </div>
-                       <button onClick={handleSignOut} className="w-9 h-9 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors group" title="Sign out">
-                         <LogOut size={14} className="text-white/40 group-hover:text-emerald-400 transition-colors" />
-                       </button>
-                     </div>
-                   ) : (
-                     <button onClick={() => setShowAuthModal(true)} className="w-9 h-9 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors group" title="Sign in">
-                       <LogIn size={14} className="text-white/40 group-hover:text-emerald-400 transition-colors" />
+        {/* Top Bar */}
+        <header className="flex-none px-6 pt-safe mt-3 z-40 relative flex justify-center animate-fade-in-up">
+          <div className="ios-glass h-12 rounded-full px-1.5 flex items-center justify-between w-full max-w-[450px] shadow-2xl backdrop-blur-md">
+             <button onClick={() => setShowCitySearch(true)} className="flex items-center space-x-2 px-4 h-9 hover:bg-white/5 rounded-full transition-all active:scale-95">
+                <MapPin size={15} className="text-emerald-500" />
+                <span className="text-[13px] font-bold tracking-tight text-white/90 truncate max-w-[120px]">{selectedCity.title}</span>
+             </button>
+             
+             <div className="flex items-center gap-1">
+                 <button 
+                   onClick={toggleAdhan}
+                   className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${
+                     adhanEnabled ? 'text-emerald-400 bg-emerald-500/10' : 'text-white/20 hover:bg-white/10'
+                   }`}
+                 >
+                   {adhanEnabled ? <Bell size={14} /> : <BellOff size={14} />}
+                 </button>
+                 
+                 <button onClick={() => setShowWallpaperSelector(true)} className="w-9 h-9 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors group">
+                   <Palette size={14} className="text-white/40 group-hover:text-emerald-400 transition-colors" />
+                 </button>
+                 
+                 <button onClick={() => setLang(lang === 'kk' ? 'ru' : 'kk')} className="px-3 h-9 text-[11px] font-black text-emerald-500 hover:bg-white/10 rounded-full transition-all uppercase tracking-[0.2em]">
+                   {lang}
+                 </button>
+
+                 {currentUser ? (
+                   <div className="flex items-center gap-2 pl-1">
+                     <img 
+                       src={currentUser.photoURL || ''} 
+                       alt="User" 
+                       className="w-8 h-8 rounded-full border border-emerald-500/30"
+                       onDoubleClick={() => setShowAdmin(true)}
+                     />
+                     <button onClick={handleSignOut} className="w-9 h-9 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors group">
+                       <LogOut size={14} className="text-white/40 group-hover:text-red-400 transition-colors" />
                      </button>
-                   )}
-               </div>
-            </div>
-          </header>
-        )}
+                   </div>
+                 ) : (
+                   <button onClick={() => setShowAuthModal(true)} className="w-9 h-9 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors group">
+                     <LogIn size={14} className="text-white/40 group-hover:text-emerald-400 transition-colors" />
+                   </button>
+                 )}
+             </div>
+          </div>
+        </header>
 
         <main className={`flex-1 relative w-full mx-auto overflow-y-auto no-scrollbar scroll-smooth ${currentView === 'prayer' ? 'pt-4' : 'pt-2'} px-5 max-w-5xl`}>
           <div className="pb-36 lg:pb-12 pt-4">
@@ -275,51 +297,111 @@ const App: React.FC = () => {
               {currentView === 'ai-imam' && <div className="animate-slide-up ios-glass rounded-[3rem] overflow-hidden min-h-[600px]"><AIImamView lang={lang} labels={t} /></div>}
               {currentView === 'hadith' && <HadithView lang={lang} labels={t} mode="hadith" />}
               {currentView === 'riwayat' && <HadithView lang={lang} labels={t} mode="riwayat" />}
-              {currentView === 'more' && (
-                <div className="animate-slide-up ios-glass rounded-[3rem] p-10 flex flex-col space-y-6">
-                    <div className="mb-6"><h3 className="text-5xl font-black tracking-tighter text-white animate-fade-in-up">Қосымша</h3><p className="text-[11px] text-emerald-400 font-black uppercase tracking-[0.3em] mt-2 animate-fade-in-up" style={{animationDelay: '100ms'}}>Реттеулер мен сервистер</p></div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <button onClick={() => setCurrentView('hadith')} className="flex items-center justify-between p-6 rounded-[2.2rem] bg-white/5 border border-white/5 w-full hover:bg-white/10 active:scale-[0.97] group animate-slide-up" style={{animationDelay: '120ms'}}>
-                        <div className="flex items-center gap-5"><div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shadow-lg"><Book size={22} className="text-white" /></div><span className="font-bold text-xl">{t.hadith}</span></div><ChevronRight className="text-white/20 group-hover:text-emerald-500" size={22} />
-                      </button>
-                      <button onClick={() => setCurrentView('riwayat')} className="flex items-center justify-between p-6 rounded-[2.2rem] bg-white/5 border border-white/5 w-full hover:bg-white/10 active:scale-[0.97] group animate-slide-up" style={{animationDelay: '130ms'}}>
-                        <div className="flex items-center gap-5"><div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center shadow-lg"><ScrollText size={22} className="text-white" /></div><span className="font-bold text-xl">{t.riwayat}</span></div><ChevronRight className="text-white/20 group-hover:text-emerald-500" size={22} />
-                      </button>
-                      <button onClick={() => setCurrentView('ai-imam')} className="flex items-center justify-between p-6 rounded-[2.2rem] bg-white/5 border border-white/5 w-full hover:bg-white/10 active:scale-[0.97] group animate-slide-up" style={{animationDelay: '140ms'}}>
-                        <div className="flex items-center gap-5"><div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow-lg"><MessageCircle size={22} className="text-white" /></div><span className="font-bold text-xl">{t.aiImam}</span></div><ChevronRight className="text-white/20 group-hover:text-emerald-500" size={22} />
-                      </button>
-                      <button onClick={() => setCurrentView('calendar')} className="flex items-center justify-between p-6 rounded-[2.2rem] bg-white/5 border border-white/5 w-full hover:bg-white/10 active:scale-[0.97] group animate-slide-up" style={{animationDelay: '160ms'}}>
-                        <div className="flex items-center gap-5"><div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg"><Calendar size={22} className="text-white" /></div><span className="font-bold text-xl">{t.calendar}</span></div><ChevronRight className="text-white/20 group-hover:text-emerald-500" size={22} />
-                      </button>
-                      <button onClick={() => setShowWallpaperSelector(true)} className="flex items-center justify-between p-6 rounded-[2.2rem] bg-white/5 border border-white/5 w-full hover:bg-white/10 active:scale-[0.97] group animate-slide-up" style={{animationDelay: '180ms'}}>
-                        <div className="flex items-center gap-5"><div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/10"><Palette size={22} className="text-emerald-400" /></div><span className="font-bold text-xl">{t.selectWallpaper}</span></div><ChevronRight className="text-white/20 group-hover:text-emerald-500" size={22} />
-                      </button>
-                    </div>
-                </div>
-              )}
             </div>
           </div>
         </main>
       </div>
 
-      {/* City Search Modal - Desktop Centered */}
-      {showCitySearch && (
+      {/* Modals */}
+      {showAuthModal && (
         <div className="fixed inset-0 z-[100] bg-deep-950/40 backdrop-blur-[80px] flex items-center justify-center p-6 animate-fade-in">
-           <div className="ios-glass w-full max-w-xl rounded-[3rem] p-10 flex flex-col shadow-2xl animate-ios-spring">
-             <div className="flex justify-between items-center mb-10"><h2 className="text-4xl font-black tracking-tighter">Қала таңдау</h2><button onClick={() => setShowCitySearch(false)} className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center active:scale-90"><X size={24} /></button></div>
-             <div className="relative mb-8"><input type="text" placeholder={t.searchCityPlaceholder} value={cityQuery} onChange={(e) => setCityQuery(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-3xl py-5 pl-14 pr-8 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-xl font-bold placeholder-white/20 shadow-inner" /><Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={22} /></div>
-             <div className="flex-1 max-h-[50vh] overflow-y-auto no-scrollbar space-y-4 pb-8">{filteredCities.map(city => (<button key={city.id} onClick={() => { setSelectedCity(city); setShowCitySearch(false); }} className={`w-full text-left p-6 rounded-[2.5rem] flex items-center justify-between transition-all active:scale-[0.98] ${selectedCity.id === city.id ? 'bg-emerald-600 border-emerald-400' : 'bg-white/5 border border-white/5 hover:bg-white/10'}`}><span className="font-bold text-xl">{city.title}</span>{selectedCity.id === city.id && <Check size={24} strokeWidth={4} />}</button>))}</div>
-           </div>
+          <div className="ios-glass w-full max-w-md rounded-[3rem] p-10 flex flex-col shadow-2xl animate-ios-spring">
+            <h2 className="text-3xl font-black tracking-tighter mb-6">Google-ға кіру</h2>
+            <p className="text-white/60 mb-8">Өтінегіңіз сақталады және келесі күні жалғастыра аласыз</p>
+            <button onClick={handleGoogleSignIn} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl transition-all active:scale-95 mb-4 flex items-center justify-center gap-3">
+              <LogIn size={20} /> Google-ға кіру
+            </button>
+            <button onClick={() => setShowAuthModal(false)} className="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-4 rounded-2xl transition-all">
+              Бас тарту
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Wallpaper Selector - Desktop Centered */}
+      {showAdmin && <AdminView lang={lang} onClose={() => setShowAdmin(false)} />}
+
+      {showCitySearch && (
+        <div className="fixed inset-0 z-[100] bg-deep-950/40 backdrop-blur-[80px] flex items-center justify-center p-6 animate-fade-in">
+          <div className="ios-glass w-full max-w-2xl h-[70vh] rounded-[3rem] flex flex-col shadow-2xl animate-ios-spring overflow-hidden">
+            <div className="p-8 flex-none">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-3xl font-black tracking-tighter">Қала таңдау</h2>
+                <button onClick={() => setShowCitySearch(false)} className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all">
+                  <X size={24} />
+                </button>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-white/30" size={20} />
+                <input 
+                  type="text" 
+                  placeholder="Қала немесе ауыл атын жазыңыз..." 
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 pl-14 pr-6 text-lg font-bold focus:outline-none focus:border-emerald-500/50 transition-all"
+                  value={cityQuery}
+                  onChange={(e) => setCityQuery(e.target.value)}
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto px-8 pb-8 no-scrollbar">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {filteredCities.map(city => (
+                  <button 
+                    key={city.id} 
+                    onClick={() => {
+                      setSelectedCity(city);
+                      setShowCitySearch(false);
+                    }}
+                    className={`flex items-center justify-between p-5 rounded-2xl border transition-all active:scale-95 ${
+                      selectedCity.id === city.id 
+                        ? 'bg-emerald-500/20 border-emerald-500/30 text-white' 
+                        : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:border-white/10'
+                    }`}
+                  >
+                    <span className="font-bold">{city.title}</span>
+                    {selectedCity.id === city.id && <Check size={18} className="text-emerald-400" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showWallpaperSelector && (
         <div className="fixed inset-0 z-[100] bg-deep-950/40 backdrop-blur-[80px] flex items-center justify-center p-6 animate-fade-in">
-           <div className="ios-glass w-full max-w-4xl rounded-[3rem] p-10 flex flex-col shadow-2xl animate-ios-spring">
-             <div className="flex justify-between items-center mb-10"><h2 className="text-4xl font-black tracking-tighter">{t.selectWallpaper}</h2><button onClick={() => setShowWallpaperSelector(false)} className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center active:scale-90"><X size={24} /></button></div>
-             <div className="flex-1 overflow-y-auto max-h-[60vh] no-scrollbar pb-10"><div className="grid grid-cols-2 md:grid-cols-4 gap-5">{BACKGROUNDS.map(bg => (<button key={bg.id} onClick={() => { setCurrentBg(bg); setShowWallpaperSelector(false); }} className={`aspect-[9/16] rounded-[2.8rem] overflow-hidden relative border-[4px] transition-all duration-500 ${currentBg.id === bg.id ? 'border-emerald-500 scale-100' : 'border-transparent opacity-40 hover:opacity-100'}`}>{bg.type === 'dynamic' ? (<div className="w-full h-full bg-gradient-to-br from-emerald-600 via-indigo-900 to-black flex flex-col items-center justify-center p-4"><div className="flex gap-2 mb-4"><Sun className="text-amber-400 animate-pulse" size={32} /><Moon className="text-blue-300" size={32} /></div><span className="text-[11px] font-black uppercase text-center tracking-widest">{bg.name?.[lang === 'en' ? 'ru' : lang]}</span></div>) : (<img src={bg.url} className="w-full h-full object-cover" alt="Wallpaper" />)}{currentBg.id === bg.id && (<div className="absolute inset-0 bg-emerald-500/20 flex items-center justify-center"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-2xl"><Check size={26} className="text-emerald-600" strokeWidth={5} /></div></div>)}<div className="absolute bottom-6 left-0 right-0 text-center"><span className="text-[9px] font-black uppercase tracking-[0.3em] bg-black/60 px-4 py-2 rounded-full backdrop-blur-md border border-white/10">{bg.name?.[lang === 'en' ? 'ru' : lang] || bg.id}</span></div></button>))}</div></div>
-           </div>
+          <div className="ios-glass w-full max-w-4xl h-[80vh] rounded-[3rem] flex flex-col shadow-2xl animate-ios-spring overflow-hidden">
+            <div className="p-8 flex-none">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-3xl font-black tracking-tighter">Тұсқағаздар</h2>
+                <button onClick={() => setShowWallpaperSelector(false)} className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all">
+                  <X size={24} />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto px-8 pb-8 no-scrollbar">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {BACKGROUNDS.map(bg => (
+                  <button 
+                    key={bg.id} 
+                    onClick={() => {
+                      setCurrentBg(bg);
+                      setShowWallpaperSelector(false);
+                    }}
+                    className={`group relative aspect-[16/10] rounded-3xl overflow-hidden border-2 transition-all active:scale-95 ${
+                      currentBg.id === bg.id ? 'border-emerald-500 shadow-2xl shadow-emerald-500/20' : 'border-transparent'
+                    }`}
+                  >
+                    <img src={bg.url} alt={bg.id} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                    <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                      <span className="text-xs font-black uppercase tracking-widest text-white/90">{bg.name?.[lang as 'kk' | 'ru'] || bg.id}</span>
+                      {currentBg.id === bg.id && <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center"><Check size={12} /></div>}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

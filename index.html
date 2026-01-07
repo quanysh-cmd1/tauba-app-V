@@ -79,7 +79,22 @@
       }
     </script>
     <style>
-      body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); background-color: #0f111a; font-size: 14px; }
+      body { 
+        padding-top: env(safe-area-inset-top); 
+        padding-bottom: env(safe-area-inset-bottom); 
+        background-color: #0a0b10; 
+        font-size: 14px; 
+        overflow-x: hidden;
+        width: 100%;
+        position: fixed;
+        inset: 0;
+      }
+      
+      #root {
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+      }
       
       .ios-glass {
         background: rgba(255, 255, 255, 0.03);

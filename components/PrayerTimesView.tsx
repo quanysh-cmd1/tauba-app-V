@@ -103,19 +103,19 @@ const PrayerTimesView: React.FC<PrayerTimesViewProps> = ({ timings, hijri, event
   }
 
   return (
-    <div className="flex flex-col lg:flex-row lg:items-start lg:gap-12">
-      <div className="flex flex-col items-center justify-center mb-10 relative px-4 lg:sticky lg:top-10 lg:w-1/3">
+    <div className="flex flex-col lg:flex-row lg:items-start lg:gap-8">
+      <div className="flex flex-col items-center justify-center mb-6 relative px-4 lg:sticky lg:top-10 lg:w-1/3">
           <div className="text-center z-10 w-full flex flex-col items-center">
-            <div className="inline-flex items-center gap-3 bg-white/5 px-6 py-3 rounded-full border border-white/10 backdrop-blur-3xl mb-10 shadow-inner animate-slide-up">
+            <div className="inline-flex items-center gap-3 bg-white/5 px-4 py-2.5 rounded-full border border-white/10 backdrop-blur-3xl mb-8 shadow-inner animate-slide-up">
                <span className="text-[14px] font-black text-emerald-400 tabular-nums tracking-wider">{currentTime.toLocaleTimeString('kk-KZ', { hour: '2-digit', minute: '2-digit' })}</span>
                <div className="w-2 h-2 bg-emerald-500/40 rounded-full animate-pulse"></div>
                <span className="text-[12px] font-black text-white/50 uppercase tracking-[0.2em]">{hijri?.fullString}</span>
             </div>
             
-            <div className="relative w-80 h-80 flex items-center justify-center animate-float lg:scale-110">
+            <div className="relative w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center animate-float lg:scale-110">
                 <div className="absolute inset-0 bg-emerald-500/5 blur-[120px] rounded-full scale-125 animate-breathe"></div>
                 
-                <svg className="absolute inset-0 -rotate-90 w-full h-full p-4 drop-shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+                <svg className="absolute inset-0 -rotate-90 w-full h-full p-4 drop-shadow-[0_0_30px_rgba(16,185,129,0.3)]" viewBox="0 0 320 320">
                    <circle cx="160" cy="160" r="140" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="4" />
                    <circle 
                      cx="160" cy="160" r="140" 
@@ -136,7 +136,7 @@ const PrayerTimesView: React.FC<PrayerTimesViewProps> = ({ timings, hijri, event
 
                 <div className="flex flex-col items-center justify-center relative z-10">
                     <span className="text-[12px] font-black uppercase tracking-[0.8em] text-white/20 mb-3">қалды</span>
-                    <div className="text-8xl font-black tracking-tighter text-white tabular-nums flex items-baseline leading-none drop-shadow-2xl">
+                    <div className="text-6xl sm:text-8xl font-black tracking-tighter text-white tabular-nums flex items-baseline leading-none drop-shadow-2xl">
                         {timeLeft ? timeLeft.split(':').slice(0, 2).join(':') : "00:00"}
                         <span className="text-3xl opacity-20 ml-2 font-bold tabular-nums tracking-tighter">
                           {timeLeft ? timeLeft.split(':')[2] : "00"}

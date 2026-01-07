@@ -43,7 +43,7 @@ const AIImamView: React.FC<AIImamViewProps> = ({ lang, labels }) => {
 
   return (
     <div className="flex flex-col h-full text-current">
-      <div className="flex-1 overflow-y-auto space-y-6 p-6 custom-scrollbar" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 p-4 sm:p-6 custom-scrollbar" ref={scrollRef}>
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in-up`}>
             <div className={`flex items-end max-w-[90%] space-x-3 ${msg.role === 'user' ? 'flex-row-reverse space-x-reverse' : 'flex-row'}`}>
@@ -58,7 +58,7 @@ const AIImamView: React.FC<AIImamViewProps> = ({ lang, labels }) => {
               </div>
 
               {/* Bubble */}
-              <div className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm border backdrop-blur-sm ${
+              <div className={`p-3 sm:p-4 rounded-2xl text-sm leading-relaxed shadow-sm border backdrop-blur-sm ${
                 msg.role === 'user' 
                   ? 'bg-emerald-600/90 text-white rounded-br-sm border-emerald-500/50' 
                   : 'bg-white/10 text-white rounded-bl-sm border-white/10'

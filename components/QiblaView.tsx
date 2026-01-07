@@ -16,17 +16,17 @@ const QiblaView: React.FC<QiblaViewProps> = ({ lat, lng, labels }) => {
   }, [lat, lng]);
 
   return (
-    <div className="flex flex-col items-center justify-start h-full overflow-hidden text-current pt-8 space-y-12">
+    <div className="flex flex-col items-center justify-start h-full overflow-hidden text-current pt-4 sm:pt-8 space-y-8 sm:space-y-12">
       
-      <div className="text-center space-y-3 z-10">
-        <h2 className="text-4xl font-bold font-serif drop-shadow-sm tracking-wide">{labels.qibla}</h2>
+      <div className="text-center space-y-2 sm:space-y-3 z-10">
+        <h2 className="text-3xl sm:text-4xl font-bold font-serif drop-shadow-sm tracking-wide">{labels.qibla}</h2>
         <div className="inline-flex items-center space-x-2 bg-white/10 px-4 py-2 rounded-full border border-white/5 backdrop-blur-sm">
           <span className="opacity-70 text-sm font-medium uppercase tracking-wider">{labels.kaabaDirection}:</span>
           <span className="font-bold text-xl text-emerald-300">{Math.round(qiblaAngle)}°</span>
         </div>
       </div>
 
-      <div className="relative w-72 h-72 md:w-80 md:h-80 group">
+      <div className="relative w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 group">
         {/* Outer Glow */}
         <div className="absolute inset-0 bg-emerald-500/20 blur-3xl rounded-full opacity-50 group-hover:opacity-70 transition-opacity"></div>
 

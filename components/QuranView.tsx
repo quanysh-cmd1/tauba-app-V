@@ -171,18 +171,18 @@ const QuranView: React.FC<QuranViewProps> = ({ lang, labels }) => {
 
   return (
     <div className="flex flex-col h-full animate-fade-in">
-      <div className="px-6 pt-10 pb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-         <h2 className="text-5xl font-black tracking-tighter">Құран Кәрім</h2>
+      <div className="px-4 sm:px-6 pt-6 sm:pt-10 pb-6 sm:pb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-6">
+         <h2 className="text-3xl sm:text-5xl font-black tracking-tighter">Құран Кәрім</h2>
          <div className="relative w-full md:max-w-md">
             <input 
               type="text" placeholder={labels.searchSurah} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-full py-5 pl-16 pr-8 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-xl font-bold placeholder-white/20 shadow-inner transition-all"
+              className="w-full bg-white/5 border border-white/10 rounded-full py-3.5 sm:py-5 pl-12 sm:pl-16 pr-6 sm:pr-8 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-lg sm:text-xl font-bold placeholder-white/20 shadow-inner transition-all"
             />
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={24} />
+            <Search className="absolute left-5 sm:left-6 top-1/2 -translate-y-1/2 text-white/20" size={20} />
          </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-40 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 no-scrollbar">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-40 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 no-scrollbar">
          {filteredSurahs.map((surah, idx) => {
            const kzName = getSurahKazakhName(surah.number);
            return (

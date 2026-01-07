@@ -67,14 +67,14 @@ const CalendarView: React.FC<CalendarViewProps> = ({ lang, labels }) => {
   return (
     <div className="flex flex-col h-full animate-fade-in text-white">
       {/* Header */}
-      <div className="px-6 pt-6 pb-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-           <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400">
-             <CalendarIcon size={20} />
+      <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2 sm:gap-3">
+           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400">
+             <CalendarIcon size={16} />
            </div>
            <div>
-             <h2 className="text-xl font-black tracking-tight">{currentDate.toLocaleDateString(lang === 'kk' ? 'kk-KZ' : 'ru-RU', { month: 'long', year: 'numeric' })}</h2>
-             <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60">Ислами күнтізбе</p>
+             <h2 className="text-lg sm:text-xl font-black tracking-tight">{currentDate.toLocaleDateString(lang === 'kk' ? 'kk-KZ' : 'ru-RU', { month: 'long', year: 'numeric' })}</h2>
+             <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60">Ислами күнтізбе</p>
            </div>
         </div>
         <div className="flex gap-2">
