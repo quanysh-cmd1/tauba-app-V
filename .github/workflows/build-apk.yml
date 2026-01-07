@@ -59,14 +59,20 @@ jobs:
           path: android/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: success()
         with:
           files: android/app/build/outputs/apk/debug/app-debug.apk
-          tag_name: v${{ github.run_number }}
-          name: Tauba App v${{ github.run_number }}
+          tag_name: v1.0.${{ github.run_number }}
+          name: Tauba App v1.0.${{ github.run_number }}
           body: |
-            APK файлы дайын!
+            Tauba App жаңа нұсқасы дайын!
+            
+            Өзгерістер:
+            - Firebase Auth (Google Sign-in)
+            - Азан аудио жүйесі
+            - Админ панелі (шектеулі рұқсат)
+            - Мобильді дизайн түзетулері
           draft: false
           prerelease: false
         env:
