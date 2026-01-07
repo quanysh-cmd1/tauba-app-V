@@ -247,7 +247,11 @@ const App: React.FC = () => {
                        src={currentUser.photoURL || ''} 
                        alt="User" 
                        className="w-8 h-8 rounded-full border border-emerald-500/30"
-                       onDoubleClick={() => setShowAdmin(true)}
+	                       onDoubleClick={() => {
+	                         if (currentUser?.email === 'kuanyshbekzhigit@gmail.com') {
+	                           setShowAdmin(true);
+	                         }
+	                       }}
                      />
                      <button onClick={handleSignOut} className="w-9 h-9 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors group">
                        <LogOut size={14} className="text-white/40 group-hover:text-red-400 transition-colors" />
